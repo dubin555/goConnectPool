@@ -1,17 +1,17 @@
 package goConnectPool
 
 import (
-	"net"
-	"time"
-	"math/rand"
-	"testing"
 	"log"
+	"math/rand"
+	"net"
 	"sync"
+	"testing"
+	"time"
 )
 
 var (
 	InitialCap = 5
-	MaxActive = 60
+	MaxActive  = 60
 	MaximumCap = 30
 	network    = "tcp"
 	address    = "127.0.0.1:9999"
@@ -101,7 +101,6 @@ func TestPool_Put(t *testing.T) {
 		conn, _ := p.Get()
 		conns[i] = conn
 	}
-
 
 	// now put them all back
 	for _, conn := range conns {

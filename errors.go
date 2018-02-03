@@ -7,11 +7,11 @@ type ErrInvalidCap struct {
 
 func NewErrInvalidCap(message string) *ErrInvalidCap {
 	return &ErrInvalidCap{
-		message:message,
+		message: message,
 	}
 }
 
-func (e *ErrInvalidCap) Error () string {
+func (e *ErrInvalidCap) Error() string {
 	return e.message
 }
 
@@ -22,7 +22,7 @@ type ErrFactoryInitial struct {
 
 func NewErrFactoryInitial(message string) *ErrFactoryInitial {
 	return &ErrFactoryInitial{
-		message:message,
+		message: message,
 	}
 }
 
@@ -37,7 +37,7 @@ type ErrPoolClosed struct {
 
 func NewErrPoolClosed(message string) *ErrPoolClosed {
 	return &ErrPoolClosed{
-		message:message,
+		message: message,
 	}
 }
 
@@ -52,7 +52,7 @@ type ErrConnLimit struct {
 
 func NewErrConnLimit(message string) *ErrConnLimit {
 	return &ErrConnLimit{
-		message:message,
+		message: message,
 	}
 }
 

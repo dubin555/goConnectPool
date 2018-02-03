@@ -1,8 +1,8 @@
 package goConnectPool
 
 import (
-	"sync"
 	"net"
+	"sync"
 )
 
 // The channel pool will implements the Pool
@@ -37,10 +37,10 @@ func NewChannelPool(initialCap int, maxCap int, maxActive int, factory Factory) 
 	}
 
 	c := &channelPool{
-		conns: make(chan net.Conn, maxCap),
-		actives:make(chan struct{}, maxActive),
-		factory: factory,
-		chanClosed:make(chan bool, 10),
+		conns:      make(chan net.Conn, maxCap),
+		actives:    make(chan struct{}, maxActive),
+		factory:    factory,
+		chanClosed: make(chan bool, 10),
 	}
 
 	for i := 0; i < initialCap; i++ {
@@ -89,7 +89,7 @@ func (c *channelPool) get(isNonBlocking bool) (net.Conn, error) {
 		select {
 		case c.actives <- struct{}{}:
 		// actives channel still have room
-		case <- c.chanClosed:
+		case <-c.chanClosed:
 			c.setStateClose()
 			return nil, NewErrPoolClosed("Pool closed")
 		default:
@@ -97,9 +97,9 @@ func (c *channelPool) get(isNonBlocking bool) (net.Conn, error) {
 		}
 	} else {
 		select {
-		case c.actives <- struct {}{}:
+		case c.actives <- struct{}{}:
 			// block when pool has room
-		case <- c.chanClosed:
+		case <-c.chanClosed:
 			c.setStateClose()
 			return nil, NewErrPoolClosed("Pool closed")
 		}
@@ -111,7 +111,7 @@ func (c *channelPool) get(isNonBlocking bool) (net.Conn, error) {
 	}
 
 	select {
-	case conn := <- conns:
+	case conn := <-conns:
 		if conn == nil {
 			return nil, NewErrPoolClosed("Conn is null")
 		}

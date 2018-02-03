@@ -8,8 +8,8 @@ import (
 // PoolConn is a wrapper of net.Conn to change the default Close() method.
 type PoolConn struct {
 	net.Conn
-	mu sync.Mutex
-	c *channelPool
+	mu       sync.Mutex
+	c        *channelPool
 	unusable bool
 }
 
