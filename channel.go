@@ -5,6 +5,7 @@ import (
 	"net"
 )
 
+// The channel pool will implements the Pool
 type channelPool struct {
 	mu sync.Mutex
 
@@ -17,13 +18,17 @@ type channelPool struct {
 	// factory to generate net.Conn
 	factory Factory
 
+	// channel to sync the close signal
 	chanClosed chan bool
 
+	// sign symbol to show closed state
 	closed bool
 }
 
+// Func to generate a net.Conn
 type Factory func() (net.Conn, error)
 
+// Factory function to new a channel pool
 func NewChannelPool(initialCap int, maxCap int, maxActive int, factory Factory) (Pool, error) {
 
 	// check capacity setting
@@ -50,29 +55,25 @@ func NewChannelPool(initialCap int, maxCap int, maxActive int, factory Factory) 
 	return c, nil
 }
 
-func (c *channelPool) tryClose(conn net.Conn) error {
-
-	// actives minus one when closing the connection
-	// would not be blocked because actives plus one when open it.
-	<- c.actives
-
-	if conn != nil {
-		return conn.Close()
-	}
-	return nil
-}
-
 func (c *channelPool) getConnsAndFactory() (chan net.Conn, Factory) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.conns, c.factory
 }
 
-func (c * channelPool) getActives() chan struct{} {
+func (c *channelPool) getActives() chan struct{} {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	actives := c.actives
 	return actives
+}
+
+func (c *channelPool) setStateClose() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.closed = true
+	// will not block since the chanClosed will be taken one
+	c.chanClosed <- true
 }
 
 // Get a net.Conn from the channelPool, if there is an available connection in channel,
@@ -80,14 +81,16 @@ func (c * channelPool) getActives() chan struct{} {
 // wrap it to PoolConn use release the source when closed.
 func (c *channelPool) get(isNonBlocking bool) (net.Conn, error) {
 
+	if c.closed {
+		return nil, NewErrPoolClosed("Pool closed")
+	}
+
 	if isNonBlocking {
 		select {
 		case c.actives <- struct{}{}:
 		// actives channel still have room
 		case <- c.chanClosed:
-			c.mu.Lock()
-			c.closed = true
-			c.mu.Unlock()
+			c.setStateClose()
 			return nil, NewErrPoolClosed("Pool closed")
 		default:
 			return nil, NewErrConnLimit("conn limit reacted")
@@ -97,9 +100,7 @@ func (c *channelPool) get(isNonBlocking bool) (net.Conn, error) {
 		case c.actives <- struct {}{}:
 			// block when pool has room
 		case <- c.chanClosed:
-			c.mu.Lock()
-			c.closed = true
-			c.mu.Unlock()
+			c.setStateClose()
 			return nil, NewErrPoolClosed("Pool closed")
 		}
 	}
@@ -156,13 +157,11 @@ func (c *channelPool) put(conn net.Conn) error {
 func (c *channelPool) Close() {
 	c.mu.Lock()
 	conns := c.conns
-	actives := c.actives
 	if !c.closed {
 		c.chanClosed <- true
 	}
 	// change point inside channelPool to nil, for GC
 	c.conns = nil
-	c.actives = nil
 	c.factory = nil
 	c.mu.Unlock()
 
@@ -173,9 +172,6 @@ func (c *channelPool) Close() {
 
 	// close the conns for rejecting the request
 	close(conns)
-
-	// close the actives
-	close(actives)
 
 	// close the conn in the channel
 	for conn := range conns {
