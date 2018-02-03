@@ -1,5 +1,8 @@
-# goConnectPool  [![Build Status](http://img.shields.io/travis/fatih/pool.svg?style=flat-square)](https://travis-ci.org/dubin555/goConnectPool)
+# goConnectPool  
+[![Build Status](http://img.shields.io/travis/fatih/pool.svg?style=flat-square)](https://travis-ci.org/dubin555/goConnectPool)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dubin555/goConnectPool)](https://goreportcard.com/report/github.com/dubin555/goConnectPool)
 
+## What is goConnectPool
 A go net.conn pool for Golang. Inspired by the Pool(fatih/pool), add some code and function for limit the active connection numbers.
 
 ## Install and Usage
