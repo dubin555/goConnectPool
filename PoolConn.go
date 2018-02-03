@@ -13,7 +13,7 @@ type PoolConn struct {
 	unusable bool
 }
 
-// Put the resource back into pool is possible.
+// Close method, return the resource back into pool is possible.
 func (p *PoolConn) Close() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()

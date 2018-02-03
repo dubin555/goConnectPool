@@ -25,10 +25,10 @@ type channelPool struct {
 	closed bool
 }
 
-// Func to generate a net.Conn
+// Factory function to generate a net.Conn
 type Factory func() (net.Conn, error)
 
-// Factory function to new a channel pool
+// NewChannelPool method to create factory function to new a channel pool
 func NewChannelPool(initialCap int, maxCap int, maxActive int, factory Factory) (Pool, error) {
 
 	// check capacity setting
