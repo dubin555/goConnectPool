@@ -125,10 +125,13 @@ func (c *channelPool) get(isNonBlocking bool) (net.Conn, error) {
 	}
 }
 
+// Get a net.Conn in Blocking Mode
 func (c *channelPool) Get() (net.Conn, error) {
 	return c.get(false)
 }
 
+// TryGet a net.Conn in NonBlocking Mode
+// return nil if reach the limit actives
 func (c *channelPool) TryGet() (net.Conn, error) {
 	return c.get(true)
 }
@@ -154,6 +157,7 @@ func (c *channelPool) put(conn net.Conn) error {
 	}
 }
 
+// Close the pool
 func (c *channelPool) Close() {
 	c.mu.Lock()
 	conns := c.conns
@@ -179,11 +183,13 @@ func (c *channelPool) Close() {
 	}
 }
 
+// Len of the pool available conns
 func (c *channelPool) Len() int {
 	conns, _ := c.getConnsAndFactory()
 	return len(conns)
 }
 
+// LenActives of the pool
 func (c *channelPool) LenActives() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
